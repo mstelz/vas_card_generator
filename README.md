@@ -83,7 +83,7 @@ Defines the basic information about each ship.
 ```
 ship_id,ship_name,ship_type,points,flank_speed,armour,hull,traits,ship_image
 1,HMS King George V,Battleship,600,"5""",7+,89/29,"Aircraft 2, Armoured Deck",images/hms_king_george_v.png
-2,New Mexico,Battleship,395,"4""",6+,72/24,"Aircraft 4, Armoured Deck, Torpedo Belt 2",images/uss_new_mexico.png
+2,New Mexico,Battleship,395,"4""",6+,72/24,"Aircraft 4, Armoured Deck, Torpedo Belt 2",new_mexico.png
 ```
 
 #### `weapon_systems.csv`

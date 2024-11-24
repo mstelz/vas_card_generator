@@ -1,7 +1,6 @@
 ship_id,weapon_system,fire_arc,point_blank,short,long,extreme,ad,ap,dd,traits
-1,A Turret,Front,"9""","19""","29""","39""",2,3,3,Restricted
-1,B Turret,Front,"9""","19""","29""","39""",2,3,3,Restricted
-1,Y Turret,Front,"5""","11""","17""","23""",-,-,-,"DF, Weak, Local 6"
+1,Light Guns (8 x 5-inch),Full,"4""","9""","13""","18""",6,-2,1,"DP, Weak"
+1,Light Guns (4 x 5-inch),"Port, Starboard, Aft","4""","9""","13""","18""",3,-2,1,"DP, Weak"
 2,A Turret (3 x 14-inch),Port,"9""","18""","27""","37""",3,+2,3,-
 2,B Turret (3 x 14-inch),Port,"9""","18""","27""","37""",3,+2,3,-
 2,Y Turret (3 x 14-inch),Starboard,"9""","18""","27""","37""",3,+2,3,-
