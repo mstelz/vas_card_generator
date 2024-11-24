@@ -47,29 +47,30 @@ def create_arc_image(arcs, output_path):
     }
 
     # Create a blank image
-    img = Image.new("RGBA", (width + 50, height), (255, 255, 255, 0)) # +50 for the arrow
+    img = Image.new("RGBA", (width + 50, height), (255, 255, 255, 0))  # +50 for the arrow
     draw = ImageDraw.Draw(img)
-
-    # # Draw a very subtle center circle
-    # center_radius = 5
-    # draw.ellipse(
-    #     [center[0] - center_radius, center[1] - center_radius,
-    #      center[0] + center_radius, center[1] + center_radius],
-    #     outline=(0, 0, 0, 50),
-    #     width=1
-    # )
 
     # Draw the arcs
     for arc in arcs:
         if arc in arc_angles:
             start, end = arc_angles[arc]
             draw.pieslice(
-                [center[0] - radius + 50, center[1] - radius, # +50 for the arrow
-                 center[0] + radius + 50, center[1] + radius], # +50 for the arrow
+                [center[0] - radius + 50, center[1] - radius,  # +50 for the arrow
+                 center[0] + radius + 50, center[1] + radius],  # +50 for the arrow
                 start=start, end=end,
                 fill=(139, 0, 0, 200)  # Dark red fill
             )
 
+    # Draw the thin black border around the circle
+    border_thickness = 1  # Thickness of the border
+    draw.ellipse(
+        [center[0] - radius + 50, center[1] - radius,  # +50 for the arrow
+         center[0] + radius + 50, center[1] + radius],  # +50 for the arrow
+        outline="black",
+        width=border_thickness
+    )
+
+    # Draw the arrow
     arrow_base_y = 100 // 2
     arrow_coords = [
         (10, arrow_base_y),  # Arrow tip
