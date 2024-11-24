@@ -95,7 +95,7 @@ Defines the weapon systems for each ship.
 |-----------------|--------------------------------------------------|---------------|
 | `ship_id`       | ID matching the ship from `ships.csv`            | `1`           |
 | `weapon_system` | Name of the weapon system                        | `A Turret`    |
-| `fire_arc`      | Firing arc of the weapon                         | `Bow`       |
+| `fire_arc`      | Firing arc of the weapon                         | `Fore`       |
 | `point_blank`   | Point-blank range                                | `9"`          |
 | `short`         | Short range                                      | `18"`         |
 | `long`          | Long range                                       | `27"`         |
@@ -105,15 +105,24 @@ Defines the weapon systems for each ship.
 | `dd`            | Damage dice                                      | `3`           |
 | `traits`        | Special traits                                   | `-`  |
 
+#### Fire Arcs
+##### Valid Fire Arcs
+Fire arcs are case-insensitive and support the following single or combined arcs:
+
+- Single arcs: `Fore`, `Aft`, `Port`, `Starboard`
+- Combined arcs are seperated by a comma: `Fore, Aft`
+
+##### Fire Arc Images
+Fire arc images are generated using the `createArc.py` script. These images will be stored in the fire_arcs/ folder and linked dynamically on the ship cards.
 
 #### Example
 
 ```
 ship_id,weapon_system,fire_arc,point_blank,short,long,extreme,ad,ap,dd,traits
-1,A Turret,Front,9",19",29",39",2,3,3,Restricted
-1,B Turret,Front,9",19",29",39",2,3,3,Restricted
-2,Torpedoes,Front,6",14",21",30",1,1,2,Limited
-2,Main Guns,Front,10",20",30",40",3,4,4,Armoured
+1,A Turret,Fore,9",19",29",39",2,3,3,Restricted
+1,B Turret,"Aft, Port",9",19",29",39",2,3,3,Restricted
+2,Torpedoes,Port,6",14",21",30",1,1,2,Limited
+2,Light Guns,"Fore, Aft, Port, Starboard",10",20",30",40",3,4,4,Armoured
 ```
 
 ---
