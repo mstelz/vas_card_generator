@@ -58,7 +58,7 @@ def create_arc_image(arcs, output_path):
                 [center[0] - radius + 50, center[1] - radius,  # +50 for the arrow
                  center[0] + radius + 50, center[1] + radius],  # +50 for the arrow
                 start=start, end=end,
-                fill=(139, 0, 0, 200)  # Dark red fill
+                fill="#571314"  # Dark red fill
             )
 
     # Draw the thin black border around the circle
