@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from string import Template
-import os 
+import os
 from PIL import Image, ImageDraw, ImageFont
 
 # Input CSV and template paths
@@ -13,6 +13,7 @@ ships_csv = "ships.csv"
 weapons_csv = "weapon_systems.csv"
 template_file = "shipcard.html"
 output_dir = "output_images"
+fire_arcs_dir = "fire_arcs"
 os.makedirs(output_dir, exist_ok=True)
 
 # Load the CSV files
@@ -29,12 +30,39 @@ options.add_argument("--headless")
 options.add_argument("--disable-gpu")
 driver = webdriver.Chrome(options=options)
 
+def standardize_fire_arc(fire_arc):
+    """
+    Standardize fire arc input by trimming whitespace,
+    converting to lowercase, and sorting components for consistency.
+    """
+    if pd.isna(fire_arc):
+        return None
+    # Split, standardize, and sort
+    return "_".join(sorted(part.strip().capitalize() for part in fire_arc.split(",")))
+
+def get_fire_arc_image(fire_arc):
+    """
+    Generate or select the correct fire arc image based on the fire_arc input.
+    """
+    # Standardize the input
+    standardized_fire_arc = standardize_fire_arc(fire_arc)
+    if not standardized_fire_arc:
+        return ""
+
+    # Generate file name based on standardized arcs
+    file_name = standardized_fire_arc.lower() + ".png"
+    fire_arc_path = os.path.join(fire_arcs_dir, file_name)
+
+    # Check if the image exists
+    if os.path.exists(fire_arc_path):
+        return f'<img src="{fire_arc_path}" alt="{fire_arc}" width="45" />'
+    else:
+        print(f"Warning: Fire arc image {fire_arc_path} not found for '{fire_arc}'")
+        return ""
+
 def draw_vertical_lines(image_path, num_top_lines):
     """
     Draw vertical lines at the top and bottom of the image based on the 300 DPI setting.
-    The number of top lines is dynamic based on the ship's hull value.
-    Add numbers at the end of those lines with a slight gap.
-    Ensure the final image dimensions match the target size.
     """
     # Target dimensions (in pixels at 300 DPI)
     target_width = 1654
@@ -103,11 +131,14 @@ for _, ship in ships.iterrows():
         # Ensure 'traits' is handled correctly
         traits = weapon['traits'] if pd.notna(weapon['traits']) else "-"
 
+        # Get the fire arc image HTML
+        fire_arc_img = get_fire_arc_image(weapon["fire_arc"])
+
         # Generate the row
         weapon_rows_html += f"""
         <tr>
             <td>{weapon['weapon_system']}</td>
-            <td>{weapon['fire_arc']}</td>
+            <td>{fire_arc_img}</td>
             <td>{weapon['point_blank']}</td>
             <td>{weapon['short']}</td>
             <td>{weapon['long']}</td>
@@ -119,18 +150,13 @@ for _, ship in ships.iterrows():
         </tr>
         """
 
-    # Extract the first number from the hull (e.g., "72/24" -> 7)
-    num_top_lines = int(str(ship["hull"]).split("/")[0][0])
-
     # Validate and handle missing ship/nation images
     ship_image_html = ""
     if not pd.isna(ship["ship_image"]) and isinstance(ship["ship_image"], str) and os.path.exists("ship_images/" + ship["ship_image"]):
-        print("Ship image found:", ship["ship_image"])
         ship_image_html = f'<img class="ship-image" src="ship_images/{ship["ship_image"]}" alt="{ship["ship_name"]}" />'
 
     nation_html = ""
     if not pd.isna(ship["nation"]) and isinstance(ship["nation"], str) and os.path.exists("flags/" + ship["nation"]):
-        print("Nation image found:", ship["nation"])
         nation_html = f'<img class="flag" src="flags/{ship["nation"]}" alt="Flag" />'
 
     # Replace placeholders in the template with ship and weapon data
@@ -139,8 +165,8 @@ for _, ship in ships.iterrows():
         ship_name=ship["ship_name"].upper(),
         ship_type=ship["ship_type"].upper(),
         points=ship["points"],
-        ship_image_html=ship_image_html,  # Insert the generated ship image HTML
-        nation_html=nation_html,  # Insert the generated nation flag HTML
+        ship_image_html=ship_image_html,
+        nation_html=nation_html,
         flank_speed=ship["flank_speed"],
         armour=ship["armour"],
         hull=ship["hull"],
@@ -155,7 +181,7 @@ for _, ship in ships.iterrows():
 
     # Open the temporary HTML file in the browser
     driver.get(f"file://{os.path.abspath(temp_html_path)}?cache-bust={os.urandom(8).hex()}")
-
+    
     # Inject CSS to hide scrollbars
     driver.execute_script("""
         document.body.style.margin = '0';
@@ -181,12 +207,8 @@ for _, ship in ships.iterrows():
     print(f"Saving screenshot to: {screenshot_path}")
     driver.save_screenshot(screenshot_path)
 
-    # Save the image with 300 DPI and draw vertical lines
-    with Image.open(screenshot_path) as img:
-        img.save(screenshot_path, dpi=(300, 300))
-
     # Add vertical lines after ensuring the image has been saved at 300 DPI
-    draw_vertical_lines(screenshot_path, num_top_lines)
+    draw_vertical_lines(screenshot_path, int(str(ship["hull"]).split("/")[0][0]))
 
     # Clean up the temporary HTML file
     os.remove(temp_html_path)
