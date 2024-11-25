@@ -150,6 +150,14 @@ Generated cards will be saved in the `output_images/` folder.
 
 ---
 
+### Donate
+
+To help me with creating new awesome tools and models you can 
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/mstelz)
+
+---
+
 ### License
 
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
