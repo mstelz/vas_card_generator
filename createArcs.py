@@ -13,7 +13,8 @@ fire_arcs = [
     "Aft, Port",
     "Aft, Port, Starboard",
     "Aft, Starboard",
-    "Starboard"
+    "Starboard",
+    "Port, Starboard"
 ]
 
 output_dir = "fire_arcs"
@@ -40,10 +41,10 @@ def create_arc_image(arcs, output_path):
 
     # Arc angles
     arc_angles = {
-        "Fore": (45, 135),
-        "Port": (135, 225),
-        "Aft": (225, 315),
-        "Starboard": (315, 45)
+        "Port": (45, 135),
+        "Aft": (135, 225),
+        "Starboard": (225, 315),
+        "Fore": (315, 45)
     }
 
     # Create a blank image
