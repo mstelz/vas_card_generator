@@ -17,15 +17,3 @@ jobs:
           fetch-depth: 0
       - name: "Scan Repository"
         uses: "hugoalh/scan-virus-ghaction@v0.20.0"
-        with:
-          git_ignores: |-
-            Param($GitCommitMeta)
-            Return (
-              $GitCommit.AuthorName -imatch '^dependabot' -or
-              ($GitCommit.AuthorDate -lt ([DateTime]::Parse('2022-01-01T00:00:00Z')) -and $GitCommit.AuthorName -imatch '^octocat$')
-            )
-          git_limit: 100
-          ignores_pre: |-
-            Param($ElementPreMeta)
-            Return ($Meta.Path -imatch '^node_modules[\\/]'):
-
