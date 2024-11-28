@@ -5,10 +5,7 @@ a = Analysis(
     ['generate.py'],
     pathex=[],
     binaries=[],
-    datas=[
-        ('shipcard.html', '.'), # include HTML template
-        ('fonts', 'fonts'), # include Fonts folder
-    ],
+    datas=[('shipcard.html', '.'), ('fonts', 'fonts')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

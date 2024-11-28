@@ -99,7 +99,7 @@ def draw_vertical_lines(image_path, num_top_lines):
 
         # Font for numbers
         font_size = int(2.25 * px_per_mm)  # Font size is 2.25mm
-        font = ImageFont.truetype("./fonts/dejavu/DejaVuSans.ttf", font_size)
+        font = ImageFont.truetype("./fonts/DejaVuSans.ttf", font_size)
 
         # Dynamically calculate the top numbers based on num_top_lines
         top_numbers = [i * 10 for i in range(1, num_top_lines + 1)]
