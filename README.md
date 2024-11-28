@@ -19,6 +19,10 @@ Easily and automatically create **Victory at Sea** ship cards for your 3D-printe
 
 ## Getting Started
 
+There are two ways to use this script either via the supplied executable, see [running via executable](#running-via-executable).
+
+Or you can download and run the python scripts directly. In which case start with the [Prerequisites Section Below](#prerequisites).
+
 ### Prerequisites
 
 To run this project, you need the following installed:
@@ -138,6 +142,28 @@ To generate cards:
 ```bash
 python generate.py
 ```
+
+### Running via Executable
+
+1. Ensure you have the following files and folders in the same directory as the executable:
+   - `ships.csv`: Contains ship data.
+   - `weapon_systems.csv`: Contains weapon data.
+   - `ship_images/`: Directory for ship images.
+   - `flags/`: Directory for nation flags.
+
+2. Place the executable in the root directory of your setup.
+
+3. Run the executable:
+   - On Windows:
+     ```cmd
+     VictoryAtSeaCardGenerator.exe
+     ```
+   - On Linux/Mac:
+     ```bash
+     ./VictoryAtSeaCardGenerator
+     ```
+
+     Or simply double click the file.
 
 Generated cards will be saved in the `output_images/` folder.
 

@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from string import Template
 import os
+import sys
 from PIL import Image, ImageDraw, ImageFont
 
 # Input CSV and template paths
@@ -15,6 +16,19 @@ template_file = "shipcard.html"
 output_dir = "output_images"
 fire_arcs_dir = "fire_arcs"
 os.makedirs(output_dir, exist_ok=True)
+
+# Check for required folders and files
+def check_setup():
+    required_files = [ships_csv, weapons_csv, "ship_images", "flags"]
+    missing_items = [item for item in required_files if not os.path.exists(item)]
+    if missing_items:
+        print("Error: The following required files or directories are missing:")
+        for item in missing_items:
+            print(f"  - {item}")
+        print("\nPlease ensure the directory structure matches the required format and includes the necessary files.")
+        sys.exit(1)
+        
+check_setup()
 
 # Load the CSV files
 ships = pd.read_csv(ships_csv)
