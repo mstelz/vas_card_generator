@@ -108,7 +108,8 @@ def draw_vertical_lines(image_path, num_top_lines):
             draw.line([(x, 0), (x, line_height)], fill="#571314", width=3)
             # Draw the number with a gap below the line
             text = str(top_numbers[i])
-            text_width, text_height = draw.textsize(text, font=font)
+            text_width = draw.textlength(text, font=font)  # Get text width
+            text_height = font.size  # Get text height
             draw.text((x - text_width / 2, line_height + gap), text, fill="black", font=font)
 
         # Draw 10 lines at the bottom with numbers
@@ -120,11 +121,12 @@ def draw_vertical_lines(image_path, num_top_lines):
             draw.line([(x, bottom_y_start), (x, img.height)], fill="#571314", width=2)
             # Draw the number with a gap above the line
             text = str(bottom_numbers[i])
-            text_width, text_height = draw.textsize(text, font=font)
+            text_width = draw.textlength(text, font=font)  # Get text width
+            text_height = font.size  # Get text height
             draw.text((x - text_width / 2, bottom_y_start - text_height - gap), text, fill="black", font=font)
 
         # Explicitly resize to ensure correct dimensions
-        img = img.resize((target_width, target_height), Image.ANTIALIAS)
+        img = img.resize((target_width, target_height), Image.LANCZOS)
 
         # Save the updated image with 300 DPI
         img.save(image_path, dpi=(dpi, dpi))
