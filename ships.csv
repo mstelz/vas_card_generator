@@ -2,3 +2,4 @@ ship_id,ship_name,ship_type,points,flank_speed,armour,hull,traits,ship_image,nat
 1,Essex,Carrier,270,"6""",3+,70/23,"Advanced Radar, Carrier, Torpedo Belt 3",essex.png,usa.png
 2,New Mexico,Battleship,395,"4""",6+,72/24,"Aircraft 4, Armoured Deck, Torpedo Belt 2",new_mexico.png,usa.png
 3,John C. Butler,Destroyer,60,"5""",1+,4/1,"Agile, Advanced Radar, Sub-Hunter, Depth Charge, Hedgehogs",john-c-butler.png,usa.png
+4,Kagero,Destroyer,100,"7""",1+,5/2,"Agile, Depth Charge",kagero-class.png,japan.png

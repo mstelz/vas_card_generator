@@ -11,3 +11,7 @@ ship_id,weapon_system,fire_arc,point_blank,short,long,extreme,ad,ap,dd,traits
 3,Light Guns (2 x 5-inch),"Fore, Aft, Port, Starboard","4""","9""","13""","18""",1,2,1,"DP, Weak"
 3,AA Battery,"Fore, Aft, Port, Starboard","1""","2""","3""","5""",1,-,-,Local 1
 3,Port/Starboard Mk 15 Torpedoes,"Port,Starboard","2""","5""","7""","10""",3,-,3,"Devastating, One-Shot"
+4,Light Guns (6 x 5-inch),"Fore, Aft, Port, Starboard","5""","10""","15""","20""",3,2,1,Weak
+4,AA Battery,"Fore, Aft, Port, Starboard",-,-,-,-,-,-,-,Local 1
+4,Port/Starboard Type 93 Torpedoes,"Port, Starboard","8""","17""","25""","34""",4,-,3,"Devastating, Slow-Loading, Wakeless"
+4,Port/Starboard Type 93 Torpedoes,"Port, Starboard","8""","17""","25""","34""",4,-,3,"Devastating, Slow-Loading, Wakeless"
