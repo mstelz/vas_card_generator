@@ -224,7 +224,7 @@ for _, ship in ships.iterrows():
     driver.save_screenshot(screenshot_path)
 
     # Add vertical lines after ensuring the image has been saved at 300 DPI
-    draw_vertical_lines(screenshot_path, int(str(ship["hull"]).split("/")[0][0]))
+    draw_vertical_lines(screenshot_path, int(str(ship["hull"]).split("/")[0]) // 10)
 
     # Clean up the temporary HTML file
     os.remove(temp_html_path)

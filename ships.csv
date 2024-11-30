@@ -1,5 +1,12 @@
 ship_id,ship_name,ship_type,points,flank_speed,armour,hull,traits,ship_image,nation
-1,Essex,Carrier,270,"6""",3+,70/23,"Advanced Radar, Carrier, Torpedo Belt 3",essex.png,usa.png
-2,New Mexico,Battleship,395,"4""",6+,72/24,"Aircraft 4, Armoured Deck, Torpedo Belt 2",new_mexico.png,usa.png
-3,John C. Butler,Destroyer,60,"5""",1+,4/1,"Agile, Advanced Radar, Sub-Hunter, Depth Charge, Hedgehogs",john-c-butler.png,usa.png
-4,Kagero,Destroyer,100,"7""",1+,5/2,"Agile, Depth Charge",kagero-class.png,japan.png
+1,Essex Class Carrier,Carrier,270,"6""",3+,70/23,"Advanced Radar, Carrier, Torpedo Belt 3",essex.png,usa.png
+2,New Mexico Class Battleship,Battleship,395,"4""",6+,72/24,"Aircraft 4, Armoured Deck, Torpedo Belt 2",new_mexico.png,usa.png
+3,John C. Butler Class Destroyer,Destroyer,60,"5""",1+,4/1,"Agile, Advanced Radar, Sub-Hunter, Depth Charge, Hedgehogs",john-c-butler.png,usa.png
+4,Kagero Class Destroyer,Destroyer,100,"7""",1+,5/2,"Agile, Depth Charge",kagero-class.png,japan.png
+5,6-Gun Armed Merchant Cruiser,Civilian,25,"3""",1+,15/5,Lumbering,,
+6,Liner,Civilian,25,"6""",1+,72/24,Lumbering,,
+7,Oil Tanker,Civilian,30,"4""",1+,15/5,Lumbering,,
+8,Seaplane Tender,Civilian,25,"4""",1+,12/4,"Aircraft 6, Lumbering",,
+9,Tramp Freighter,Civilian,10,"2""",1+,6/2,,,
+10,Troop Ship,Civilian,25,"3""",1+,16/5,Lumbering,,
+11,Victory Class Cargo Ship,Civilian,30,"3""",1+,14/4,Lumbering,,

@@ -15,3 +15,18 @@ ship_id,weapon_system,fire_arc,point_blank,short,long,extreme,ad,ap,dd,traits
 4,AA Battery,"Fore, Aft, Port, Starboard",-,-,-,-,-,-,-,Local 1
 4,Port/Starboard Type 93 Torpedoes,"Port, Starboard","8""","17""","25""","34""",4,-,3,"Devastating, Slow-Loading, Wakeless"
 4,Port/Starboard Type 93 Torpedoes,"Port, Starboard","8""","17""","25""","34""",4,-,3,"Devastating, Slow-Loading, Wakeless"
+5,Light Guns (6 x 6-inch),"Fore, Aft, Port, Starboard","4""","9""","13""","18""",4,-2,1,"Restricted, Weak"
+5,AA Battery,"Fore, Aft, Port, Starboard","1""","2""","3""","5""",1,-,-,Local 1
+5,Port Torpedoes,Port,"2""","5""","7""","10""",2,-,3,Devastating
+5,Starboard Torpedeos,Starboard,"2""","5""","7""","10""",2,-,3,Devastating
+6,Light Guns (1 x 4-inch),"Aft, Port, Starboard","3""","6""","9""","12""",1,-2,1,"Slow-Loading, Weak"
+6,AA Battery,"Fore, Aft, Port, Starboard",-,-,-,-,-,-,-,Local 1
+7,Light Guns (1 x 5-inch),"Aft, Port, Startboard","4""","8""","12""","16""",1,-2,1,"Slow-Loading, Weak"
+7,AA Battery,"Fore, Aft, Port, Starboard",-,-,-,-,-,-,-,Local 1
+8,Light Guns (4 x 4.7-inch),"Fore, Aft, Port, Starboard","4""","8""","12""","16""",2,-2,1,"Restricted, Weak"
+8,AA Battery,"Fore, Aft, Port, Starboard",-,-,-,-,-,-,-,Local 1
+9,Light Guns (1 x 4-inch),"Aft, Port, Starboard","3""","6""","9""","12""",1,-2,1,"Slow-Loading, Weak"
+10,Light Guns (1 x 4-inch),"Aft, Port, Starboard","3""","6""","9""","12""",1,-2,1,"Slow-Loading, Weak"
+10,AA Battery,"Fore, Aft, Port, Starboard",-,-,-,-,-,-,-,Local 1
+11,Light Guns (1 x 5-inch),"Aft, Port, Starboard","4""","9""","13""","18""",1,-2,1,"DP, Slow-Loading, Weak"
+11,AA Battery,"Fore, Aft, Port, Starboard","1""","3""","4""","6""",1,-,-,Local 1
