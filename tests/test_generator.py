@@ -100,3 +100,119 @@ class TestCsvIntegrity:
             if pd.notna(arc) and str(arc).strip() != "-":
                 svg = generate_fire_arc_svg(str(arc))
                 assert svg != "", f"Fire arc '{arc}' for weapon '{row['weapon_system']}' could not be generated"
+
+
+class TestPathSanitization:
+    def test_sanitize_path_segment(self):
+        from generate import sanitize_path_segment
+        assert sanitize_path_segment("Normal Name") == "Normal_Name"
+        assert sanitize_path_segment("Name / With / Slashes") == "Name_With_Slashes"
+        assert sanitize_path_segment('Name "With" Quotes') == "Name_With_Quotes"
+        assert sanitize_path_segment("Leading and Trailing. ") == "Leading_and_Trailing"
+        assert sanitize_path_segment("Multiple    Spaces") == "Multiple_Spaces"
+
+
+class TestComputeCardPaths:
+    def test_default_group_by_type(self):
+        from generate import compute_card_paths
+        df = pd.DataFrame([
+            {
+                "ship_id": 1,
+                "ship_name": "Bismarck",
+                "ship_type": "Battleship",
+                "nation_name": "Germany",
+                "points": 450,
+            },
+            {
+                "ship_id": 2,
+                "ship_name": "Iowa",
+                "ship_type": "Battleship",
+                "nation_name": "United States",
+                "points": 850,
+            },
+            {
+                "ship_id": 3,
+                "ship_name": "Enterprise",
+                "ship_type": "Carrier",
+                "nation_name": "United States",
+                "points": 400,
+            },
+        ])
+        paths = compute_card_paths(df, "output_images")
+        assert paths[1] == os.path.join("output_images", "Germany", "Battleship", "Bismarck.png")
+        assert paths[2] == os.path.join("output_images", "United_States", "Battleship", "Iowa.png")
+        assert paths[3] == os.path.join("output_images", "United_States", "Aircraft_Carrier", "Enterprise.png")
+
+    def test_explicit_group_by_class(self):
+        from generate import compute_card_paths
+        df = pd.DataFrame([
+            {
+                "ship_id": 1,
+                "ship_name": "Bismarck",
+                "ship_class": "Bismarck",
+                "nation_name": "Germany",
+                "points": 450,
+            },
+            {
+                "ship_id": 2,
+                "ship_name": "Iowa",
+                "ship_class": "Iowa",
+                "nation_name": "United States",
+                "points": 850,
+            },
+        ])
+        paths = compute_card_paths(df, "output_images", group_by="class")
+        assert paths[1] == os.path.join("output_images", "Germany", "Bismarck", "Bismarck.png")
+        assert paths[2] == os.path.join("output_images", "United_States", "Iowa", "Iowa.png")
+
+    def test_duplicate_name_disambiguation(self):
+        from generate import compute_card_paths
+        df = pd.DataFrame([
+            {
+                "ship_id": 10,
+                "ship_name": "Colorado (1944)",
+                "ship_type": "Battleship",
+                "nation_name": "United States",
+                "points": 485,
+            },
+            {
+                "ship_id": 11,
+                "ship_name": "Colorado (1944)",
+                "ship_type": "Battleship",
+                "nation_name": "United States",
+                "points": 505,
+            },
+        ])
+        paths = compute_card_paths(df, "output_images")
+        assert paths[10] == os.path.join("output_images", "United_States", "Battleship", "Colorado_(1944)_485pts.png")
+        assert paths[11] == os.path.join("output_images", "United_States", "Battleship", "Colorado_(1944)_505pts.png")
+
+    def test_flat_mode(self):
+        from generate import compute_card_paths
+        df = pd.DataFrame([
+            {
+                "ship_id": 1,
+                "ship_name": "Bismarck",
+                "ship_type": "Battleship",
+                "nation_name": "Germany",
+                "points": 450,
+            }
+        ])
+        paths = compute_card_paths(df, "output_images", group_by="none")
+        assert paths[1] == os.path.join("output_images", "Bismarck.png")
+
+    def test_fallback_nation_flag(self):
+        from generate import compute_card_paths
+        df = pd.DataFrame([
+            {
+                "ship_id": 1,
+                "ship_name": "Hood",
+                "nation": "royal_navy_ensign.png",
+                "ship_type": "Battlecruiser",
+                "points": 350,
+            }
+        ])
+        paths = compute_card_paths(df, "output_images")
+        assert paths[1] == os.path.join("output_images", "Great_Britain", "Battlecruiser", "Hood.png")
+
+

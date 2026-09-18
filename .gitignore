@@ -23,3 +23,7 @@ Thumbs.db
 
 # Temporary generation files
 output_images/temp_*.html
+
+# Scraped raw ship plates
+ship_plates/
+
