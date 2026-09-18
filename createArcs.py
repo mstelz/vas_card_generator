@@ -1,20 +1,23 @@
 import os
 from PIL import Image, ImageDraw
 
-# Define fire arc combinations
+# Define fire arc combinations (all 15 possible non-empty combinations of 4 quadrants)
 fire_arcs = [
     "Fore",
     "Fore, Port",
-    "Fore, Port, Starboard",
     "Fore, Starboard",
-    "Port",
+    "Fore, Aft",
+    "Fore, Port, Starboard",
+    "Fore, Aft, Port",
+    "Fore, Aft, Starboard",
     "Fore, Aft, Port, Starboard",
     "Aft",
     "Aft, Port",
-    "Aft, Port, Starboard",
     "Aft, Starboard",
+    "Aft, Port, Starboard",
+    "Port",
     "Starboard",
-    "Port, Starboard"
+    "Port, Starboard",
 ]
 
 output_dir = "fire_arcs"
@@ -72,7 +75,7 @@ def create_arc_image(arcs, output_path):
     )
 
     # Draw the arrow
-    arrow_base_y = 100 // 2
+    arrow_base_y = height // 2
     arrow_coords = [
         (10, arrow_base_y),  # Arrow tip
         (40, arrow_base_y - 10),  # Upper base

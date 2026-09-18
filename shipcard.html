@@ -8,9 +8,10 @@
     <base href="file:///${base_dir}/" />
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: Arial, "DejaVu Sans", sans-serif;
             margin: 0;
             padding: 0;
+            overflow: hidden;
             background-color: #d3cabd;
         }
 
@@ -81,8 +82,8 @@
 
         .ship-image {
             height: 250px;
-            margin-bottom: 20px;
-            margin-right: 40px;
+            max-width: 50%;
+            object-fit: contain;
             margin: auto;
         }
 
