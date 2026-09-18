@@ -2,16 +2,16 @@
 """
 fetch_ship_assets.py
 
-Scrapes and downloads ship plate images and flags from https://www.vas-admiralty-rules.com/
+Downloads ship images and flags from a remote source
 for use with the Victory at Sea (VAS) card generator.
 
 Features:
 - Crawls all 7 nations (UK, US, France, Netherlands, Italy, Germany, Japan)
-- Discovers all unique full-size ship plate drawings (/img/ship_plates/<name>.png)
-- Extracts ship metadata (ship name, class, type, nation, refits, points) into a catalog CSV
-- Downloads ship plates concurrently using ThreadPoolExecutor
+- Discovers all unique full-size ship drawings
+- Extracts ship metadata (ship name, class, type, nation, refits, points)
+- Downloads ship images concurrently using ThreadPoolExecutor
 - Downloads ensign / flag images for all nations
-- Optionally auto-converts plates into transparent black silhouettes using connected components
+- Optionally auto-converts images into transparent black silhouettes using connected components
 """
 
 import argparse
@@ -29,7 +29,7 @@ import numpy as np
 from PIL import Image
 from scipy.ndimage import label
 
-BASE_URL = "https://www.vas-admiralty-rules.com/"
+DEFAULT_BASE_URL = os.environ.get("VAS_BASE_URL", "")
 
 NATION_CODES = {
     "uk": "Great Britain",
@@ -87,13 +87,13 @@ def download_file(url: str, dest_path: str, timeout: int = 20) -> bool:
         return False
 
 
-def convert_plate_to_silhouette(
+def convert_image_to_silhouette(
     source_img_path: str,
     output_img_path: str,
     flip_horizontal: bool = False
 ) -> bool:
     """
-    Convert a Shipbucket-style ship plate image into a clean transparent silhouette.
+    Convert a ship drawing into a clean transparent silhouette.
     Uses connected-component analysis to isolate the ship hull/superstructure and discard
     the scale bar, measurement text ('50m', '100m'), and title/credits.
     """
@@ -177,14 +177,14 @@ def convert_plate_to_silhouette(
         return False
 
 
-def crawl_site(nations: List[str]) -> Tuple[Dict[str, str], List[dict]]:
+def crawl_site(base_url: str, nations: List[str]) -> Tuple[Dict[str, str], List[dict]]:
     """
     Crawls ships_list and ships_class_list for specified nations.
     Returns:
-    - plates_map: {plate_filename: full_image_url}
-    - catalog: list of dicts with ship and plate details
+    - images_map: {image_filename: full_image_url}
+    - catalog: list of dicts with ship and image details
     """
-    plates_map = {}
+    images_map = {}
     catalog = []
     seen_entries = set()
 
@@ -193,36 +193,37 @@ def crawl_site(nations: List[str]) -> Tuple[Dict[str, str], List[dict]]:
         print(f"Crawling nation: {nation_name} ({nation_code})...")
 
         for page in ["ships_list.php", "ships_class_list.php"]:
-            url = f"{BASE_URL}{page}?op=pick_nation&nation={nation_code}"
+            url = urljoin(base_url, f"{page}?op=pick_nation&nation={nation_code}") if base_url else ""
+            if not url:
+                continue
             html = fetch_url(url)
             if not html:
                 continue
 
             # Find all table cells with ship entries
-            # Pattern: <b>Ship Name</b><br><a href="...unit=(\d+)..."><img src=/img/ship_plates/([^>]+)></a><br><i>Class</i> Class Type
-            # Let's use regex to capture ship items
             items = re.findall(
-                r'<b>([^<]+)</b>\s*<br>\s*<a\s+href="([^"]*unit=(\d+)[^"]*)"[^>]*>\s*<img\s+src=[\'"]?/img/ship_plates/([^\'">]+)[\'"]?></a>\s*<br>(?:<i>([^<]*)</i>)?(?:\s*Class)?\s*([^\s<]+)?',
+                r'<b>([^<]+)</b>\s*<br>\s*<a\s+href="([^"]*unit=(\d+)[^"]*)"[^>]*>\s*<img\s+src=[\'"]?([^\'">]+)[\'"]?></a>\s*<br>(?:<i>([^<]*)</i>)?(?:\s*Class)?\s*([^\s<]+)?',
                 html,
                 re.IGNORECASE
             )
 
-            for name, link, unit_id, thumb_img, ship_class, ship_type in items:
+            for name, link, unit_id, thumb_src, ship_class, ship_type in items:
                 name = name.strip()
                 unit_id = unit_id.strip()
                 ship_class = ship_class.strip() if ship_class else ""
                 ship_type = ship_type.strip() if ship_type else ""
 
-                # Full plate image name (remove _thumb if present)
-                if thumb_img.endswith("_thumb.png"):
-                    plate_filename = thumb_img[:-10] + ".png"
+                thumb_filename = os.path.basename(thumb_src)
+                if thumb_filename.endswith("_thumb.png"):
+                    image_filename = thumb_filename[:-10] + ".png"
                 else:
-                    plate_filename = thumb_img
+                    image_filename = thumb_filename
 
-                plate_url = f"{BASE_URL}img/ship_plates/{plate_filename}"
-                plates_map[plate_filename] = plate_url
+                full_subpath = thumb_src.replace("_thumb.png", ".png").lstrip("/")
+                image_url = urljoin(base_url, full_subpath) if base_url else image_filename
+                images_map[image_filename] = image_url
 
-                entry_key = (nation_code, unit_id, name, plate_filename)
+                entry_key = (nation_code, unit_id, name, image_filename)
                 if entry_key not in seen_entries:
                     seen_entries.add(entry_key)
                     catalog.append({
@@ -232,20 +233,22 @@ def crawl_site(nations: List[str]) -> Tuple[Dict[str, str], List[dict]]:
                         "ship_name": name,
                         "ship_class": ship_class,
                         "ship_type": ship_type,
-                        "plate_filename": plate_filename,
-                        "plate_url": plate_url,
+                        "image_filename": image_filename,
+                        "image_url": image_url,
                     })
 
-    print(f"Discovered {len(plates_map)} unique ship plates and {len(catalog)} catalog entries.")
-    return plates_map, catalog
+    print(f"Discovered {len(images_map)} unique ship images and {len(catalog)} catalog entries.")
+    return images_map, catalog
 
 
-def download_flags(flags_dir: str):
-    """Download national naval ensigns / flags from the site."""
+def download_flags(base_url: str, flags_dir: str):
+    """Download national naval ensigns / flags from the remote source."""
     os.makedirs(flags_dir, exist_ok=True)
     print(f"\nDownloading flags to {flags_dir}...")
     for remote_name, local_name in FLAG_FILES.items():
-        url = f"{BASE_URL}img/flags/{remote_name}"
+        url = urljoin(base_url, f"img/flags/{remote_name}") if base_url else ""
+        if not url:
+            continue
         dest = os.path.join(flags_dir, local_name)
         ok = download_file(url, dest)
         if ok:
@@ -255,11 +258,16 @@ def download_flags(flags_dir: str):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Download ship images and flags from vas-admiralty-rules.com.")
+    parser = argparse.ArgumentParser(description="Download ship images and flags from remote source.")
     parser.add_argument(
-        "--plates-dir",
+        "--base-url",
+        default=DEFAULT_BASE_URL,
+        help="Base URL for remote asset source"
+    )
+    parser.add_argument(
+        "--raw-dir",
         default="ship_plates",
-        help="Directory to save raw ship plate images (default: ship_plates)"
+        help="Directory to save raw ship images (default: ship_plates)"
     )
     parser.add_argument(
         "--silhouettes-dir",
@@ -273,8 +281,8 @@ def parse_args():
     )
     parser.add_argument(
         "--catalog",
-        default="ship_catalog.csv",
-        help="Output CSV for scraped ship metadata catalog (default: ship_catalog.csv)"
+        default=None,
+        help="Optional output CSV for scraped ship metadata catalog"
     )
     parser.add_argument(
         "--nations",
@@ -291,12 +299,12 @@ def parse_args():
         "--limit",
         type=int,
         default=None,
-        help="Limit number of plates to download (default: None, download all)"
+        help="Limit number of images to download (default: None, download all)"
     )
     parser.add_argument(
         "--convert",
         action="store_true",
-        help="Also auto-convert downloaded plates into silhouettes in silhouettes-dir"
+        help="Also auto-convert downloaded images into silhouettes in silhouettes-dir"
     )
     return parser.parse_args()
 
@@ -304,54 +312,58 @@ def parse_args():
 def main():
     args = parse_args()
 
+    if not args.base_url:
+        print("Error: No base URL specified. Set VAS_BASE_URL env var or provide --base-url.", file=sys.stderr)
+        sys.exit(1)
+
     if args.nations.lower() == "all":
         nations = list(NATION_CODES.keys())
     else:
         nations = [n.strip().lower() for n in args.nations.split(",") if n.strip().lower() in NATION_CODES]
 
-    print("=== Victory at Sea Asset Scraper & Downloader ===")
+    print("=== Victory at Sea Asset Downloader ===")
     print(f"Nations: {', '.join(nations)}")
-    print(f"Plates destination: {args.plates_dir}")
+    print(f"Raw images destination: {args.raw_dir}")
     print(f"Silhouettes destination: {args.silhouettes_dir}")
     print(f"Flags destination: {args.flags_dir}")
 
     # 1. Download flags
-    download_flags(args.flags_dir)
+    download_flags(args.base_url, args.flags_dir)
 
-    # 2. Crawl site for ship plates and catalog
-    plates_map, catalog = crawl_site(nations)
+    # 2. Crawl site for ship images and catalog
+    images_map, catalog = crawl_site(args.base_url, nations)
 
-    # Save catalog
+    # Save catalog if requested
     if catalog and args.catalog:
         with open(args.catalog, "w", newline="", encoding="utf-8") as f:
-            fieldnames = ["nation", "nation_code", "unit_id", "ship_name", "ship_class", "ship_type", "plate_filename", "plate_url"]
+            fieldnames = ["nation", "nation_code", "unit_id", "ship_name", "ship_class", "ship_type", "image_filename", "image_url"]
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(catalog)
         print(f"Saved catalog metadata to: {args.catalog}")
 
     # Apply limit if requested
-    items_to_download = list(plates_map.items())
+    items_to_download = list(images_map.items())
     if args.limit:
         items_to_download = items_to_download[:args.limit]
-        print(f"Limiting download to first {len(items_to_download)} plates...")
+        print(f"Limiting download to first {len(items_to_download)} images...")
 
-    # 3. Concurrent download of ship plates
-    os.makedirs(args.plates_dir, exist_ok=True)
-    print(f"\nDownloading {len(items_to_download)} ship plates using {args.workers} workers...")
+    # 3. Concurrent download of ship images
+    os.makedirs(args.raw_dir, exist_ok=True)
+    print(f"\nDownloading {len(items_to_download)} ship images using {args.workers} workers...")
 
     success_count = 0
     fail_count = 0
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
-        future_to_plate = {
-            executor.submit(download_file, url, os.path.join(args.plates_dir, filename)): filename
+        future_to_file = {
+            executor.submit(download_file, url, os.path.join(args.raw_dir, filename)): filename
             for filename, url in items_to_download
         }
 
-        total = len(future_to_plate)
-        for i, future in enumerate(concurrent.futures.as_completed(future_to_plate), 1):
-            filename = future_to_plate[future]
+        total = len(future_to_file)
+        for i, future in enumerate(concurrent.futures.as_completed(future_to_file), 1):
+            filename = future_to_file[future]
             try:
                 ok = future.result()
                 if ok:
@@ -362,20 +374,20 @@ def main():
                 fail_count += 1
 
             if i % 50 == 0 or i == total:
-                print(f"  Progress: {i}/{total} plates processed ({success_count} succeeded, {fail_count} failed)")
+                print(f"  Progress: {i}/{total} images processed ({success_count} succeeded, {fail_count} failed)")
 
     print(f"\nDownload completed: {success_count} succeeded, {fail_count} failed.")
 
     # 4. Optional silhouette conversion
     if args.convert:
         os.makedirs(args.silhouettes_dir, exist_ok=True)
-        print(f"\nConverting {success_count} plates to silhouettes in {args.silhouettes_dir}...")
+        print(f"\nConverting {success_count} images to silhouettes in {args.silhouettes_dir}...")
         sil_success = 0
         for filename, _ in items_to_download:
-            src = os.path.join(args.plates_dir, filename)
+            src = os.path.join(args.raw_dir, filename)
             dst = os.path.join(args.silhouettes_dir, filename)
             if os.path.exists(src):
-                if convert_plate_to_silhouette(src, dst):
+                if convert_image_to_silhouette(src, dst):
                     sil_success += 1
         print(f"Silhouette conversion completed: {sil_success} silhouettes created.")
 

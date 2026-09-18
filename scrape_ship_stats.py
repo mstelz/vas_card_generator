@@ -2,10 +2,10 @@
 """
 scrape_ship_stats.py
 
-Scrapes ship statistics and weapon systems for all ships from https://www.vas-admiralty-rules.com/
+Extracts ship statistics and weapon systems for all ships.
 Generates:
-- all_ships.csv: Complete database of ships, stats, points, traits, silhouettes, and flags.
-- all_weapon_systems.csv: Complete database of all weapon systems, fire arcs, range bands, and traits.
+- ships.csv: Complete database of ships, stats, points, traits, silhouettes, and flags.
+- weapon_systems.csv: Complete database of all weapon systems, fire arcs, range bands, and traits.
 """
 
 import argparse
@@ -17,8 +17,9 @@ import re
 import sys
 import urllib.request
 from typing import Dict, List, Optional, Tuple
+from urllib.parse import urljoin
 
-BASE_URL = "https://www.vas-admiralty-rules.com/"
+DEFAULT_BASE_URL = os.environ.get("VAS_BASE_URL", "")
 
 NATION_CODES = {
     "uk": "Great Britain",
@@ -78,7 +79,7 @@ def clean_trait_text(text: str) -> List[str]:
     return cleaned
 
 
-def parse_ship_page(url: str, nation_code: str, default_plate: str) -> Optional[dict]:
+def parse_ship_page(url: str, nation_code: str, default_image: str) -> Optional[dict]:
     """Fetch and parse a ship details page."""
     page_html = fetch_text(url)
     if not page_html:
@@ -137,16 +138,16 @@ def parse_ship_page(url: str, nation_code: str, default_plate: str) -> Optional[
     if speed and not speed.endswith('"'):
         speed_formatted = f'{speed}"'
 
-    # Extract ship plate image from page if present, else fallback to default_plate
-    plate_img_m = re.search(r'/img/ship_plates/([^"\' >]+)', page_html)
-    if plate_img_m:
-        raw_plate = plate_img_m.group(1)
-        if raw_plate.endswith("_thumb.png"):
-            plate_filename = raw_plate[:-10] + ".png"
+    # Extract ship image from page if present, else fallback to default_image
+    img_m = re.search(r'/(?:img/[^/]+/)?([^"\' >/]+\.(?:png|jpg|gif))', page_html)
+    if img_m:
+        raw_img = img_m.group(1)
+        if raw_img.endswith("_thumb.png"):
+            image_filename = raw_img[:-10] + ".png"
         else:
-            plate_filename = raw_plate
+            image_filename = raw_img
     else:
-        plate_filename = default_plate
+        image_filename = default_image
 
     flag_file = NATION_FLAGS.get(nation_code, "")
     if stype == "Civilian" and not flag_file:
@@ -212,13 +213,13 @@ def parse_ship_page(url: str, nation_code: str, default_plate: str) -> Optional[
         "armour": armor,
         "hull": hull,
         "traits": traits_str,
-        "ship_image": plate_filename,
+        "ship_image": image_filename,
         "nation": flag_file,
         "weapons": weapons,
     }
 
 
-def discover_all_ship_links(nations: List[str]) -> List[dict]:
+def discover_all_ship_links(base_url: str, nations: List[str]) -> List[dict]:
     """Scan all nation lists to get each ship's direct link and initial metadata."""
     discovered = []
     seen = set()
@@ -227,13 +228,15 @@ def discover_all_ship_links(nations: List[str]) -> List[dict]:
         nation_name = NATION_CODES.get(code, code.title())
         print(f"Scanning ships list for: {nation_name} ({code})...")
         for page in ["ships_list.php", "ships_class_list.php"]:
-            url = f"{BASE_URL}{page}?op=pick_nation&nation={code}"
+            url = urljoin(base_url, f"{page}?op=pick_nation&nation={code}") if base_url else ""
+            if not url:
+                continue
             page_html = fetch_text(url)
             if not page_html:
                 continue
 
             matches = re.findall(
-                r'<b>([^<]+)</b>\s*<br>\s*<a\s+href="([^"]*(displayShipData|displaySubData|displayMerchData)[^"]*unit=(\d+)[^"]*)[^>]*>\s*<img\s+src=[\'"]?/img/ship_plates/([^\'">]+)[\'"]?>',
+                r'<b>([^<]+)</b>\s*<br>\s*<a\s+href="([^"]*(displayShipData|displaySubData|displayMerchData)[^"]*unit=(\d+)[^"]*)[^>]*>\s*<img\s+src=[\'"]?([^\'">]+)[\'"]?>',
                 page_html,
                 re.IGNORECASE
             )
@@ -241,12 +244,13 @@ def discover_all_ship_links(nations: List[str]) -> List[dict]:
             for raw_name, link, op, unit_id, thumb_img in matches:
                 name = raw_name.strip()
                 unit_id = unit_id.strip()
-                full_link = f"{BASE_URL}ship_details.php?op={op}&unit={unit_id}"
+                full_link = urljoin(base_url, f"ship_details.php?op={op}&unit={unit_id}") if base_url else ""
 
-                if thumb_img.endswith("_thumb.png"):
-                    plate_filename = thumb_img[:-10] + ".png"
+                thumb_filename = os.path.basename(thumb_img)
+                if thumb_filename.endswith("_thumb.png"):
+                    image_filename = thumb_filename[:-10] + ".png"
                 else:
-                    plate_filename = thumb_img
+                    image_filename = thumb_filename
 
                 key = (code, unit_id, name)
                 if key not in seen:
@@ -257,7 +261,7 @@ def discover_all_ship_links(nations: List[str]) -> List[dict]:
                         "unit_id": unit_id,
                         "link": full_link,
                         "ship_name_hint": name,
-                        "plate_filename": plate_filename,
+                        "image_filename": image_filename,
                     })
 
     print(f"Discovered {len(discovered)} ship links across {len(nations)} nations.")
@@ -265,9 +269,10 @@ def discover_all_ship_links(nations: List[str]) -> List[dict]:
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Scrape ship stats and weapons from vas-admiralty-rules.com.")
-    parser.add_argument("--ships-out", default="all_ships.csv", help="Output CSV for all ships (default: all_ships.csv)")
-    parser.add_argument("--weapons-out", default="all_weapons.csv", help="Output CSV for all weapons (default: all_weapons.csv)")
+    parser = argparse.ArgumentParser(description="Scrape ship stats and weapons from remote source.")
+    parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="Base URL for remote asset source")
+    parser.add_argument("--ships-out", default="ships.csv", help="Output CSV for all ships (default: ships.csv)")
+    parser.add_argument("--weapons-out", default="weapon_systems.csv", help="Output CSV for all weapons (default: weapon_systems.csv)")
     parser.add_argument("--nations", default="all", help="Comma-separated nations (default: all -> uk,us,france,netherlands,italy,germany,japan)")
     parser.add_argument("--workers", type=int, default=16, help="Concurrent workers (default: 16)")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of ships to scrape (default: None, scrape all)")
@@ -276,6 +281,10 @@ def parse_args():
 
 def main():
     args = parse_args()
+
+    if not args.base_url:
+        print("Error: No base URL specified. Set VAS_BASE_URL env var or provide --base-url.", file=sys.stderr)
+        sys.exit(1)
 
     if args.nations.lower() == "all":
         nations = list(NATION_CODES.keys())
@@ -287,7 +296,7 @@ def main():
     print(f"Workers: {args.workers}")
 
     # 1. Discover all links
-    ship_items = discover_all_ship_links(nations)
+    ship_items = discover_all_ship_links(args.base_url, nations)
     if args.limit:
         ship_items = ship_items[:args.limit]
         print(f"Limiting to first {len(ship_items)} ships...")
@@ -300,7 +309,7 @@ def main():
     ship_id_counter = 1
 
     def scrape_one(item):
-        data = parse_ship_page(item["link"], item["nation_code"], item["plate_filename"])
+        data = parse_ship_page(item["link"], item["nation_code"], item["image_filename"])
         if data:
             data["unit_id"] = item["unit_id"]
             data["nation_code"] = item["nation_code"]
